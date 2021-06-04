@@ -4,7 +4,6 @@ type Point     = (Float,Float)
 type Rect      = (Point,Float,Float)
 type Circle    = (Point,Float)
 
-
 -------------------------------------------------------------------------------
 -- Paletas
 -------------------------------------------------------------------------------
@@ -20,6 +19,9 @@ greenPalette n = [(0, 80+i*10, 0) | i <- [0..n] ]
 -- O cycle é uma função bacana -- procure saber mais sobre ela :-)
 rgbPalette :: Int -> [(Int,Int,Int)]
 rgbPalette n = take n $ cycle [(255,0,0),(0,255,0),(0,0,255)]
+--hmm agora ele vai ciclicamente do preto ao azul. Quando chega ao 255, volta a 0.
+sequenceBluePalette:: Int -> [(Int, Int, Int)]
+sequenceBluePalette n = take n $ cycle [(0,0,x) | x <- [0 .. 255]]
 
 
 
@@ -29,9 +31,14 @@ rgbPalette n = take n $ cycle [(255,0,0),(0,255,0),(0,0,255)]
 
 genRectsInLine :: Int -> [Rect]
 genRectsInLine n  = [((m*(w+gap), 0.0), w, h) | m <- [0..fromIntegral (n-1)]]
-  where (w,h) = (50,50)
-        gap = 10
+  where (w,h) = (10,500)
+        gap = 0
 
+--Agora vai incrementando os dois lados. Penso que seria legal se eu pudesse aumentar as duas variáveis em paralelo e não usar a mesma, mas o suporte a isso não parece funcionar no repl.it. Vou dizer que fiz uma função identidade que vai trocando de cor (uma que começa de cima, no caso)
+genRectsInNotLine :: Int -> [Rect]
+genRectsInNotLine n  = [((m*(w+gap), (m*(w+gap))), w, h) | m <- [0..fromIntegral (n-1)]]
+  where (w,h) = (3,3)
+        gap = 1
 
 -------------------------------------------------------------------------------
 -- Strings SVG
@@ -42,8 +49,9 @@ genRectsInLine n  = [((m*(w+gap), 0.0), w, h) | m <- [0..fromIntegral (n-1)]]
 svgRect :: Rect -> String -> String 
 svgRect ((x,y),w,h) style = 
   printf "<rect x='%.3f' y='%.3f' width='%.2f' height='%.2f' style='%s' />\n" x y w h style
-
+ 
 -- String inicial do SVG
+
 svgBegin :: Float -> Float -> String
 svgBegin w h = printf "<svg width='%.2f' height='%.2f' xmlns='http://www.w3.org/2000/svg'>\n" w h 
 
@@ -70,10 +78,10 @@ main = do
   writeFile "rects.svg" $ svgstrs
   where svgstrs = svgBegin w h ++ svgfigs ++ svgEnd
         svgfigs = svgElements svgRect rects (map svgStyle palette)
-        rects = genRectsInLine nrects
-        palette = rgbPalette nrects
-        nrects = 10
-        (w,h) = (1500,500) -- width,height da imagem SVG
+        rects = genRectsInNotLine nrects
+        palette = sequenceBluePalette nrects
+        nrects = 300
+        (w,h) = (1500,1500) -- width,height da imagem SVG
 
 
 
